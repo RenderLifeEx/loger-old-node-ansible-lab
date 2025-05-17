@@ -48,41 +48,44 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            cd /var/www/${{ secrets.BACKEND_FOLDER }}
+            if [ -d "/var/www/${{ secrets.BACKEND_FOLDER }}" ]; then
+              cd /var/www/${{ secrets.BACKEND_FOLDER }}
 
-            # Удаляет все кроме папки node_modules
-            ls | grep -v "node_modules" | xargs rm -rfv
+              # Удаляет все кроме папки node_modules
+              ls | grep -v "node_modules" | xargs rm -rfv
 
-            # Распаковка и удаление архива
-            tar -C ./ -xjf ~/uploads/logger-old-node.tar.bz2
-            rm -rf ~/uploads/logger-old-node.tar.bz2
+              # Распаковка и удаление архива
+              tar -C ./ -xjf ~/uploads/logger-old-node.tar.bz2
+              rm -rf ~/uploads/logger-old-node.tar.bz2
 
-            # Установка правильной версии Node.js
-            . ~/.nvm/nvm.sh
-            nvm install lts/fermium
-            nvm use lts/fermium
+              # Установка правильной версии Node.js
+              . ~/.nvm/nvm.sh
+              nvm install lts/fermium
+              nvm use lts/fermium
 
-            # Установка зависимостей
-            npm install
+              # Установка зависимостей
+              npm install
 
-            # Создание папки для логов если не существует
-            mkdir -p logs
+              # Создание папки для логов если не существует
+              mkdir -p logs
 
-            # Имя процесса из ecosystem.config.js
-            APP_NAME="logger-old-node-backend"
+              # Имя процесса из ecosystem.config.js
+              APP_NAME="logger-old-node-backend"
 
-            # Удаление старого процесса
-            if pm2 list | grep -q $APP_NAME; then
-              pm2 stop $APP_NAME
-              pm2 delete $APP_NAME
-            else
-              echo "Process $APP_NAME not found, skipping..."
+              # Удаление старого процесса
+              if pm2 list | grep -q $APP_NAME; then
+                pm2 stop $APP_NAME
+                pm2 delete $APP_NAME
+              else
+                echo "Process $APP_NAME not found, skipping..."
+              fi
+
+              # Запуск процесса
+              pm2 start ecosystem.config.js --env production
+              pm2 save
+            echo "Error: Directory /var/www/${{ secrets.BACKEND_FOLDER }} does not exist!"
+              exit 1
             fi
-
-            # Запуск процесса
-            pm2 start ecosystem.config.js --env production
-            pm2 save
-
       - name: Success Notification
         uses: appleboy/telegram-action@master
         with:
@@ -91,7 +94,7 @@ jobs:
           format: markdown
           message: |
             *✅ Деплой успешно завершен*
-            *🌍 Сервер:* Production
+            *🌍 Сервер:* Мечта
             *📱 Приложение:* «Logger Old Node»
             *🛠️ Тип:* Backend
             *Название коммита:* _${{ github.event.commits[0].message }}_
@@ -105,7 +108,7 @@ jobs:
           format: markdown
           message: |
             *❌ Деплой завершен неудачей*
-            *🌍 Сервер:* Production
+            *🌍 Сервер:* Мечта
             *📱 Приложение:* «Logger Old Node»
             *🛠️ Тип:* Backend
             *Название коммита:* _${{ github.event.commits[0].message }}_
