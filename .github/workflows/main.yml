@@ -58,8 +58,8 @@ jobs:
 
             cd $TARGET_DIR || exit 1
 
-            # Удаляет все кроме папки node_modules
-            ls | grep -v "node_modules" | xargs rm -rfv
+            # Удаляет все кроме папки node_modules и logs
+            ls | grep -v "\(node_modules\|logs\)" | xargs rm -rfv
 
             # Распаковка и удаление архива
             tar -C ./ -xjf ~/uploads/logger-old-node.tar.bz2
