@@ -86,8 +86,8 @@ jobs:
             # Установка зависимостей
             npm ci --no-audit --production
 
-            # Создание папки логов
-            mkdir -p logs
+            # Проверяем существование папки и создаём если её нет
+            [ -d "logs" ] || mkdir -p logs
 
             # Управление PM2 процессом
             APP_NAME="logger-old-node-backend"
