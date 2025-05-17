@@ -40,7 +40,7 @@ jobs:
           source: logger-old-node.tar.bz2
           target: ~/uploads/
 
-      - name: Deploy
+      - name: Deploy2
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
