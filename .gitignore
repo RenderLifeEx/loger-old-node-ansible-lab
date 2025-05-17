@@ -1,0 +1,10 @@
+node_modules/
+logs/
+.env
+*.tar.bz2
+.DS_Store
+.idea/
+.vscode/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

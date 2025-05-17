@@ -1,0 +1,14 @@
+{
+    "name": "loger-old-node-ansible-lab",
+    "version": "1.0.0",
+    "description": "Приложение для запуска на старой ноде через nvm установленный через ansible",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "express": "^4.17.1",
+        "winston": "^2.4.7",
+        "winston-daily-rotate-file": "^1.7.2"
+    }
+}
