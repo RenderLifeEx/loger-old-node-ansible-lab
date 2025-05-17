@@ -40,7 +40,7 @@ jobs:
           source: logger-old-node.tar.bz2
           target: ~/uploads/
 
-      - name: Deploy2
+      - name: Deploy
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -48,44 +48,54 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            if [ -d "/var/www/${{ secrets.BACKEND_FOLDER }}" ]; then
-              cd /var/www/${{ secrets.BACKEND_FOLDER }}
+            TARGET_DIR="/var/www/${{ secrets.BACKEND_FOLDER }}"
+            NVM_DIR="/usr/local/nvm"
 
-              # Удаляет все кроме папки node_modules
-              ls | grep -v "node_modules" | xargs rm -rfv
-
-              # Распаковка и удаление архива
-              tar -C ./ -xjf ~/uploads/logger-old-node.tar.bz2
-              rm -rf ~/uploads/logger-old-node.tar.bz2
-
-              # Установка правильной версии Node.js
-              . ~/.nvm/nvm.sh
-              nvm install lts/fermium
-              nvm use lts/fermium
-
-              # Установка зависимостей
-              npm install
-
-              # Создание папки для логов если не существует
-              mkdir -p logs
-
-              # Имя процесса из ecosystem.config.js
-              APP_NAME="logger-old-node-backend"
-
-              # Удаление старого процесса
-              if pm2 list | grep -q $APP_NAME; then
-                pm2 stop $APP_NAME
-                pm2 delete $APP_NAME
-              else
-                echo "Process $APP_NAME not found, skipping..."
-              fi
-
-              # Запуск процесса
-              pm2 start ecosystem.config.js --env production
-              pm2 save
-            echo "Error: Directory /var/www/${{ secrets.BACKEND_FOLDER }} does not exist!"
+            if [ ! -d "$TARGET_DIR" ]; then
+              echo "::error::Critical: Target directory $TARGET_DIR does not exist!"
               exit 1
             fi
+
+            cd $TARGET_DIR || exit 1
+
+            # Удаляет все кроме папки node_modules
+            ls | grep -v "node_modules" | xargs rm -rfv
+
+            # Распаковка и удаление архива
+            tar -C ./ -xjf ~/uploads/logger-old-node.tar.bz2
+            rm -rf ~/uploads/logger-old-node.tar.bz2
+
+            # Загрузка NVM (ваша конфигурация)
+            export NVM_DIR="$NVM_DIR"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            # Проверка что NVM загрузился
+            if ! command -v nvm &> /dev/null; then
+              echo "::error::NVM not loaded properly!"
+              exit 1
+            fi
+
+            # Установка нужной версии Node.js
+            nvm install lts/fermium
+            nvm use lts/fermium
+
+            # Проверка версии Node.js
+            echo "Using Node.js version: $(node -v)"
+            echo "Using npm version: $(npm -v)"
+
+            # Установка зависимостей
+            npm ci --no-audit --production
+
+            # Создание папки логов
+            mkdir -p logs
+
+            # Управление PM2 процессом
+            APP_NAME="logger-old-node-backend"
+
+            pm2 delete $APP_NAME 2>/dev/null || echo "No existing $APP_NAME process"
+            pm2 start ecosystem.config.js --env production
+            pm2 save
+
       - name: Success Notification
         uses: appleboy/telegram-action@master
         with:
